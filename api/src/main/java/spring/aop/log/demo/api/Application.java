@@ -10,7 +10,6 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
  * @author Lunhao Hu
  * @date 2019-01-30 15:52
  **/
-@EnableAspectJAutoProxy
 @SpringBootApplication
 public class Application {
     public static void main(String[] args) {

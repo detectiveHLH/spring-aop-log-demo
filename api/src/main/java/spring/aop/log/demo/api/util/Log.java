@@ -14,5 +14,5 @@ package spring.aop.log.demo.api.util;
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Log {
-    String type();
+    String type() default "";
 }
