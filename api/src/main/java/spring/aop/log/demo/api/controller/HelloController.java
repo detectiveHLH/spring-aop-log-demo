@@ -20,7 +20,6 @@ public class HelloController {
             @RequestParam(name = "userId") String userId,
             @RequestBody TestDTO testDTO
     ) {
-        System.out.println(testDTO);
         return "Hello" + id;
     }
 }

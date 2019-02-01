@@ -13,6 +13,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -84,6 +85,7 @@ public class LogAspect {
                 logDetail = this.replaceParam(logDetail);
             }
 
+            System.out.println(this.params);
             System.out.println(logDetail);
 
         } catch (Exception e) {
@@ -98,6 +100,9 @@ public class LogAspect {
     private void getRequestParam(JoinPoint point) {
         // 获取简单参数类型
         this.getSimpleParam();
+
+        // 获取复杂参数类型
+        this.getComplexParam();
     }
 
     /**
@@ -107,8 +112,28 @@ public class LogAspect {
         // 遍历请求中的参数名
         for (String reqParam : this.paramNames) {
             // 判断该参数在参数类中是否存在
-            if (this.isExist(this.params.getClass(), reqParam)) {
+            if (this.isExist(reqParam)) {
                 this.setRequestParamValueIntoParam(reqParam);
+            }
+        }
+    }
+
+    /**
+     * 获取复杂参数类型的值
+     */
+    private void getComplexParam() {
+        for (Object arg : this.args) {
+            // 跳过简单类型的值
+            if (arg != null && !this.isBasicType(arg)) {
+                Class argClass = arg.getClass();
+                Field[] fields = argClass.getDeclaredFields();
+                for (Field field : fields) {
+                    String paramName = field.getName();
+                    if (this.isExist(paramName)) {
+                        String value = this.getParam(arg, paramName);
+                        this.setParam(this.params, paramName, value);
+                    }
+                }
             }
         }
     }
@@ -139,18 +164,17 @@ public class LogAspect {
 
     /**
      * 判断该参数在参数类中是否存在（是否是需要记录的参数）
-     * @param targetClass
      * @param name
      * @param <T>
      * @return
      */
-    private <T> Boolean isExist(T targetClass, String name) {
-        boolean exist = false;
+    private <T> Boolean isExist(String name) {
+        boolean exist = true;
         try {
             String key = this.setFirstLetterUpperCase(name);
-            Method targetClassGetMethod = targetClass.getClass().getMethod("get" + key);
-        } catch (NoSuchMethodException e) {
-            exist = true;
+            Method targetClassGetMethod = this.params.getClass().getMethod("get" + key);
+        } catch (Exception e) {
+            exist = false;
         }
         return exist;
     }

@@ -11,7 +11,7 @@ public enum Type {
     /**
      * 操作类型
      */
-    WARNING("警告", "因 工单号 [(%workOrderNumber)] /举报 ID [(%id)] 警告玩家 [(%userId)]");
+    WARNING("警告", "因 工单号 [(%workOrderNumber)] /举报 ID [(%id)] 警告玩家 [(%userId)], 游戏名 [(%name)], 年龄 [(%age)]");
 
     /**
      * 类型

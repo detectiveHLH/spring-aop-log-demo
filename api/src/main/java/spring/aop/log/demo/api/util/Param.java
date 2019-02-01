@@ -14,6 +14,9 @@ public class Param {
      * 所有可能参数
      */
     private String id;
+    private String age;
     private String workOrderNumber;
     private String userId;
+    private String name;
+    private String email;
 }
