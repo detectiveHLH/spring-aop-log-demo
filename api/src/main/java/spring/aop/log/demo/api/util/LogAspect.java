@@ -136,14 +136,6 @@ public class LogAspect {
             // 跳过简单类型的值
             if (arg != null && !this.isBasicType(arg)) {
                 this.getFieldsParam(arg);
-//                Field[] fields = argClass.getDeclaredFields();
-//                for (Field field : fields) {
-//                    String paramName = field.getName();
-//                    if (this.isExist(paramName)) {
-//                        String value = this.getParam(arg, paramName);
-//                        this.setParam(this.params, paramName, value);
-//                    }
-//                }
             }
         }
     }
