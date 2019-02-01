@@ -45,6 +45,12 @@
             <artifactId>lombok</artifactId>
             <version>1.18.2</version>
         </dependency>
+
+        <dependency>
+            <groupId>cn.hutool</groupId>
+            <artifactId>hutool-all</artifactId>
+            <version>4.1.14</version>
+        </dependency>
     </dependencies>
 
 </project>

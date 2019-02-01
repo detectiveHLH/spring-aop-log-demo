@@ -1,5 +1,6 @@
 package spring.aop.log.demo.api.util;
 
+import cn.hutool.core.util.ArrayUtil;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.Signature;
 import org.aspectj.lang.annotation.AfterReturning;
@@ -12,7 +13,6 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
@@ -25,6 +25,22 @@ import java.lang.reflect.Method;
 @Aspect
 @Component
 public class LogAspect {
+
+    /**
+     * 请求中的所有参数
+     */
+    private Object[] args;
+
+    /**
+     * 请求中的所有参数名
+     */
+    private String[] paramNames;
+
+    /**
+     * 参数类
+     */
+    private Param params;
+
 
     /**
      * 定义切入点
@@ -46,14 +62,20 @@ public class LogAspect {
             ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
             HttpServletRequest request = attributes.getRequest();
             HttpServletResponse response = attributes.getResponse();
+            // 获取所有请求参数
+            Signature signature = point.getSignature();
+            MethodSignature methodSignature = (MethodSignature) signature;
+            this.paramNames = methodSignature.getParameterNames();
+            this.args = point.getArgs();
+
             // 实例化参数类
-            Param param = new Param();
+            this.params = new Param();
             // 注解中的类型
             String enumKey = log.type();
-            String logDetail = Type.valueOf(enumKey).getOperation();
+//            String logDetail = Type.valueOf(enumKey).getOperation();
 
             // 从请求传入参数中获取数据
-            this.getAndSetParam(point, param);
+            this.getRequestParam(point);
 
         } catch (Exception e) {
             System.out.println(e.getMessage());
@@ -63,18 +85,17 @@ public class LogAspect {
     /**
      * 获取拦截的请求中的参数
      * @param point
-     * @param param
      */
-    private void getAndSetParam(JoinPoint point, Param param) {
+    private void getRequestParam(JoinPoint point) {
         Signature signature = point.getSignature();
         MethodSignature methodSignature = (MethodSignature) signature;
         String[] reqParams = methodSignature.getParameterNames();
-        // 获取参数
-        Object[] args = point.getArgs();
-
+        // 遍历请求中的参数名
         for (String reqParam : reqParams) {
-            if (this.isExist(param.getClass(), reqParam)) {
-                System.out.println("true");
+            // 判断该参数在参数类中是否存在
+            if (this.isExist(this.params.getClass(), reqParam)) {
+                this.getAndSetValueFromArgs(reqParam);
+                System.out.println(this.params);
             }
         }
     }
@@ -100,7 +121,7 @@ public class LogAspect {
     private Boolean isBasicType(Object arg) {
         Class argClass = arg.getClass();
         String keyword = "lang";
-        return arg.toString().contains(keyword);
+        return argClass.toString().contains(keyword);
     }
 
     /**
@@ -119,6 +140,36 @@ public class LogAspect {
             exist = true;
         }
         return exist;
+    }
+
+    /**
+     * 将数据写入参数类的实例中
+     * @param targetClass
+     * @param key
+     * @param value
+     * @param <T>
+     */
+    private <T> void getAndSetParam(T targetClass, String key, String value) {
+        try {
+            Method targetClassParamSetMethod = targetClass.getClass().getMethod("set" + this.setFirstLetterUpperCase(key), String.class);
+            targetClassParamSetMethod.invoke(targetClass, value);
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 从参数中获取
+     * @param paramName
+     * @return
+     */
+    private void getAndSetValueFromArgs(String paramName) {
+        int index = ArrayUtil.indexOf(this.paramNames, paramName);
+        if (index != -1) {
+            String value = String.valueOf(this.args[index]);
+            System.out.println(this.params);
+            this.getAndSetParam(this.params, paramName, value);
+        }
     }
 
 }

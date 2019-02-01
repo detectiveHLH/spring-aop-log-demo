@@ -64,5 +64,6 @@
     <orderEntry type="library" name="Maven: org.aspectj:aspectjrt:1.9.2" level="project" />
     <orderEntry type="library" name="Maven: org.aspectj:aspectjweaver:1.9.2" level="project" />
     <orderEntry type="library" name="Maven: org.projectlombok:lombok:1.18.2" level="project" />
+    <orderEntry type="library" name="Maven: cn.hutool:hutool-all:4.1.14" level="project" />
   </component>
 </module>
