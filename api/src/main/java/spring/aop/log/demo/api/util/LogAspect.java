@@ -68,21 +68,22 @@ public class LogAspect {
             // 获取所有请求参数
             Signature signature = point.getSignature();
             MethodSignature methodSignature = (MethodSignature) signature;
+
             this.paramNames = methodSignature.getParameterNames();
             this.args = point.getArgs();
-
-            // 实例化参数类
             this.params = new Param();
+
             // 注解中的类型
             String enumKey = log.type();
             String logDetail = Type.valueOf(enumKey).getOperation();
 
-            // 从请求传入参数中获取数据
-            this.getRequestParam(point);
-
-            if (!logDetail.isEmpty()) {
-                // 将模板中的参数全部替换掉
-                logDetail = this.replaceParam(logDetail);
+            if (this.success(response)) {
+                // 从请求传入参数中获取数据
+                this.getRequestParam(point);
+                if (!logDetail.isEmpty()) {
+                    // 将模板中的参数全部替换掉
+                    logDetail = this.replaceParam(logDetail);
+                }
             }
 
             System.out.println(this.params);
@@ -95,6 +96,7 @@ public class LogAspect {
 
     /**
      * 获取拦截的请求中的参数
+     *
      * @param point
      */
     private void getRequestParam(JoinPoint point) {
@@ -153,6 +155,7 @@ public class LogAspect {
 
     /**
      * 判断该参数的构造类是否是基础类型
+     *
      * @param arg
      * @return
      */
@@ -164,6 +167,7 @@ public class LogAspect {
 
     /**
      * 判断该参数在参数类中是否存在（是否是需要记录的参数）
+     *
      * @param name
      * @param <T>
      * @return
@@ -181,6 +185,7 @@ public class LogAspect {
 
     /**
      * 将数据写入参数类的实例中
+     *
      * @param targetClass
      * @param key
      * @param value
@@ -197,6 +202,7 @@ public class LogAspect {
 
     /**
      * 通过反射获取传入的类中对应key的值
+     *
      * @param targetClass
      * @param key
      * @param <T>
@@ -214,6 +220,7 @@ public class LogAspect {
 
     /**
      * 从参数中获取
+     *
      * @param paramName
      * @return
      */
@@ -227,6 +234,7 @@ public class LogAspect {
 
     /**
      * 将模板中的预留字段全部替换为拦截到的参数
+     *
      * @param template
      * @return
      */
@@ -241,6 +249,7 @@ public class LogAspect {
 
     /**
      * 将模板中的参数转换成map的key-value形式
+     *
      * @param template
      * @return
      */
@@ -255,5 +264,15 @@ public class LogAspect {
             }
         }
         return map;
+    }
+
+    /**
+     * 根据http状态码判断请求是否成功
+     *
+     * @param response
+     * @return
+     */
+    private Boolean success(HttpServletResponse response) {
+        return response.getStatus() == 200;
     }
 }
