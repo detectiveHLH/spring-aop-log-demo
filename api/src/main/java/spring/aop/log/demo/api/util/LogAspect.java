@@ -79,7 +79,10 @@ public class LogAspect {
 
             if (this.success(response)) {
                 // 从请求传入参数中获取数据
-                this.getRequestParam(point);
+                this.getRequestParam();
+                // 从返回值中获取数据
+                this.getResponseParam(returnValue);
+
                 if (!logDetail.isEmpty()) {
                     // 将模板中的参数全部替换掉
                     logDetail = this.replaceParam(logDetail);
@@ -96,15 +99,20 @@ public class LogAspect {
 
     /**
      * 获取拦截的请求中的参数
-     *
-     * @param point
      */
-    private void getRequestParam(JoinPoint point) {
+    private void getRequestParam() {
         // 获取简单参数类型
         this.getSimpleParam();
 
         // 获取复杂参数类型
         this.getComplexParam();
+    }
+
+    /**
+     * 从返回值从获取数据
+     */
+    private void getResponseParam(Object value) {
+        this.getFieldsParam(value);
     }
 
     /**
@@ -127,15 +135,31 @@ public class LogAspect {
         for (Object arg : this.args) {
             // 跳过简单类型的值
             if (arg != null && !this.isBasicType(arg)) {
-                Class argClass = arg.getClass();
-                Field[] fields = argClass.getDeclaredFields();
-                for (Field field : fields) {
-                    String paramName = field.getName();
-                    if (this.isExist(paramName)) {
-                        String value = this.getParam(arg, paramName);
-                        this.setParam(this.params, paramName, value);
-                    }
-                }
+                this.getFieldsParam(arg);
+//                Field[] fields = argClass.getDeclaredFields();
+//                for (Field field : fields) {
+//                    String paramName = field.getName();
+//                    if (this.isExist(paramName)) {
+//                        String value = this.getParam(arg, paramName);
+//                        this.setParam(this.params, paramName, value);
+//                    }
+//                }
+            }
+        }
+    }
+
+    /**
+     * 遍历一个复杂类型，获取值并赋值给param
+     * @param target
+     * @param <T>
+     */
+    private <T> void getFieldsParam(T target) {
+        Field[] fields = target.getClass().getDeclaredFields();
+        for (Field field : fields) {
+            String paramName = field.getName();
+            if (this.isExist(paramName)) {
+                String value = this.getParam(target, paramName);
+                this.setParam(this.params, paramName, value);
             }
         }
     }
