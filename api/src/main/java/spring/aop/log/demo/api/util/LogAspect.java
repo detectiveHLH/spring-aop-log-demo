@@ -96,11 +96,16 @@ public class LogAspect {
      * @param point
      */
     private void getRequestParam(JoinPoint point) {
-        Signature signature = point.getSignature();
-        MethodSignature methodSignature = (MethodSignature) signature;
-        String[] reqParams = methodSignature.getParameterNames();
+        // 获取简单参数类型
+        this.getSimpleParam();
+    }
+
+    /**
+     * 获取简单参数类型的值
+     */
+    private void getSimpleParam() {
         // 遍历请求中的参数名
-        for (String reqParam : reqParams) {
+        for (String reqParam : this.paramNames) {
             // 判断该参数在参数类中是否存在
             if (this.isExist(this.params.getClass(), reqParam)) {
                 this.setRequestParamValueIntoParam(reqParam);
