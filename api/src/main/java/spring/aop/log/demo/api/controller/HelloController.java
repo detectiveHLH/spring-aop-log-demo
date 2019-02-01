@@ -18,7 +18,7 @@ public class HelloController {
     @GetMapping("test/{id}")
     public String test(
             @PathVariable(name = "id") Integer id,
-            @RequestParam(name = "workOrderNumber") String workOrderNumber,
+            @RequestParam(name = "workOrderNumber", required = false) String workOrderNumber,
             @RequestParam(name = "userId") String userId,
             @RequestParam(name = "name") String name
     ) {

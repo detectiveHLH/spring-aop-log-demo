@@ -15,6 +15,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * LogAspect
@@ -72,10 +74,17 @@ public class LogAspect {
             this.params = new Param();
             // 注解中的类型
             String enumKey = log.type();
-//            String logDetail = Type.valueOf(enumKey).getOperation();
+            String logDetail = Type.valueOf(enumKey).getOperation();
 
             // 从请求传入参数中获取数据
             this.getRequestParam(point);
+
+            if (!logDetail.isEmpty()) {
+                // 将模板中的参数全部替换掉
+                logDetail = this.replaceParam(logDetail);
+            }
+
+            System.out.println(logDetail);
 
         } catch (Exception e) {
             System.out.println(e.getMessage());
@@ -94,8 +103,7 @@ public class LogAspect {
         for (String reqParam : reqParams) {
             // 判断该参数在参数类中是否存在
             if (this.isExist(this.params.getClass(), reqParam)) {
-                this.getAndSetValueFromArgs(reqParam);
-                System.out.println(this.params);
+                this.setRequestParamValueIntoParam(reqParam);
             }
         }
     }
@@ -149,7 +157,7 @@ public class LogAspect {
      * @param value
      * @param <T>
      */
-    private <T> void getAndSetParam(T targetClass, String key, String value) {
+    private <T> void setParam(T targetClass, String key, String value) {
         try {
             Method targetClassParamSetMethod = targetClass.getClass().getMethod("set" + this.setFirstLetterUpperCase(key), String.class);
             targetClassParamSetMethod.invoke(targetClass, value);
@@ -159,17 +167,64 @@ public class LogAspect {
     }
 
     /**
+     * 通过反射获取传入的类中对应key的值
+     * @param targetClass
+     * @param key
+     * @param <T>
+     */
+    private <T> String getParam(T targetClass, String key) {
+        String value = "";
+        try {
+            Method targetClassParamGetMethod = targetClass.getClass().getMethod("get" + this.setFirstLetterUpperCase(key));
+            value = String.valueOf(targetClassParamGetMethod.invoke(targetClass));
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+            e.printStackTrace();
+        }
+        return value;
+    }
+
+    /**
      * 从参数中获取
      * @param paramName
      * @return
      */
-    private void getAndSetValueFromArgs(String paramName) {
+    private void setRequestParamValueIntoParam(String paramName) {
         int index = ArrayUtil.indexOf(this.paramNames, paramName);
         if (index != -1) {
             String value = String.valueOf(this.args[index]);
-            System.out.println(this.params);
-            this.getAndSetParam(this.params, paramName, value);
+            this.setParam(this.params, paramName, value);
         }
     }
 
+    /**
+     * 将模板中的预留字段全部替换为拦截到的参数
+     * @param template
+     * @return
+     */
+    private String replaceParam(String template) {
+        // 将模板中的需要替换的参数转化成map
+        Map<String, String> paramsMap = this.convertToMap(template);
+        for (String key : paramsMap.keySet()) {
+            template = template.replace("%" + key, paramsMap.get(key)).replace("(", "").replace(")", "");
+        }
+        return template;
+    }
+
+    /**
+     * 将模板中的参数转换成map的key-value形式
+     * @param template
+     * @return
+     */
+    private Map<String, String> convertToMap(String template) {
+        Map<String, String> map = new HashMap<>();
+        String[] arr = template.split("\\(");
+        for (String s : arr) {
+            if (s.contains("%")) {
+                String key = s.substring(s.indexOf("%"), s.indexOf(")")).replace("%", "").replace(")", "").replace("-", "").replace("]", "");
+                String value = this.getParam(this.params, key);
+                map.put(key, "null".equals(value) ? "(空)" : value);
+            }
+        }
+        return map;
+    }
 }
