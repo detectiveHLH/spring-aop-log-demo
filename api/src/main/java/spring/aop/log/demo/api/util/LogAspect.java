@@ -87,11 +87,9 @@ public class LogAspect {
                     // 将模板中的参数全部替换掉
                     logDetail = this.replaceParam(logDetail);
                 }
+                System.out.println(this.params);
+                System.out.println(logDetail);
             }
-
-            System.out.println(this.params);
-            System.out.println(logDetail);
-
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
